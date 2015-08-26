@@ -1,8 +1,7 @@
 var chroma = require('chroma-js')
 
 var defaultColors = [
-  0x000000,
-  0xffffff
+  '#000000', '#5C4D6B', '#3F627B', '#1C757A', '#2BAF1F', '#6BDF5F', '#e7da37', '#ebba4f', '#F72B45'
 ]
 
 var Waterfall = module.exports = function (opts) {
@@ -11,21 +10,29 @@ var Waterfall = module.exports = function (opts) {
   opts = opts || {}
   this.width = opts.width || 1024
   this.height = opts.height || 600
-  this.element = document.createElement('canvas')
-  this.element.setAttribute('width', this.width)
-  this.element.setAttribute('height', this.height)
-  this.ctx = this.element.getContext('2d')
-  this.colors = opts.colors || defaultColors
   this.rowHeight = Math.round(opts.rowHeight) || 1
+
+  this.element = document.createElement('canvas')
+  this.element.width = this.width
+  this.element.height = this.height
+  this.element.style.background = 'black'
+  this.ctx = this.element.getContext('2d')
+
+  var bufferCanvas = document.createElement('canvas')
+  bufferCanvas.width = this.width
+  bufferCanvas.height = this.rowHeight
+  this.bufferCtx = bufferCanvas.getContext('2d')
+
   this.rows = []
 
-  this.colorScale = chroma.scale([
-    '#000000', '#5C4D6B', '#3F627B', '#1C757A', '#2BAF1F', '#6BDF5F', '#e7da37', '#ebba4f', '#F72B45'
-  ]).out('hex')
+  this.colors = opts.colors || defaultColors
+  this.colorScale = chroma.scale(this.colors).out('hex')
 
   this.render()
 }
 
+    var low = Infinity
+    var high = 0
 Waterfall.prototype.render = function () {
   window.requestAnimationFrame(this.render.bind(this))
 
@@ -34,12 +41,23 @@ Waterfall.prototype.render = function () {
     this.ctx.putImageData(previous, 0, this.rowHeight)
 
     var row = this.rows.shift()
+    var samplesPerPixel = Math.floor(row.length / this.width)
 
     for (var j = 0; j < this.width; j++) {
-      var value = Math.pow(row[j] / 8 + 0.5, 3)
-      this.ctx.fillStyle = this.colorScale(value)
-      this.ctx.fillRect(j, 0, 1, this.rowHeight)
+      var total = 0
+      for (var k = j * samplesPerPixel; k < (j + 1) * samplesPerPixel; k++) {
+        total += row[k]
+      }
+      // var v = Math.log2(total / samplesPerPixel / 32 + 2.6)
+      // if (v < low) low = v
+      // if (v > high) high = v
+      // console.log(low +' '+high)
+      var value = Math.log2(total / samplesPerPixel / 32 + 2.6)
+      this.bufferCtx.fillStyle = this.colorScale(value)
+      this.bufferCtx.fillRect(j, 0, 1, this.rowHeight)
     }
+    var rowData = this.bufferCtx.getImageData(0, 0, this.width, this.rowHeight)
+    this.ctx.putImageData(rowData, 0, 0)
   }
 }
 

@@ -4,9 +4,10 @@
   "description": "An SDR application built on Electron",
   "main": "main.js",
   "scripts": {
+    "start": "./node_modules/.bin/electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Matt Bell <mappum@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "electron-prebuilt": "^0.30.4",
@@ -14,7 +15,8 @@
   },
   "dependencies": {
     "chroma-js": "^1.1.1",
-    "hackrf-stream": "^0.3.0",
+    "fft-stream": "0.0.0",
+    "hackrf-stream": "^1.0.1",
     "pixi.js": "^3.0.7",
     "stft": "0.0.0"
   }
